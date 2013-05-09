@@ -13,10 +13,17 @@ COLOURS = { 'black' : [0, 0, 0],
             'grey' : [0.4, 0.4, 0.4],
             'white' : [1, 1, 1]}
 
+class Player(object):
+    def __init__(self, x, y, health=3):
+        self.x = x
+        self.y = y
+        self.health = health
+
 class GLPlotWidget(QGLWidget):
     # default window size
     width, height = 96, 64
     bunny_point = [30, 50]
+    player = Player(20, 20)
  
     def initializeGL(self):
         """Initialize OpenGL, VBOs, upload data on the GPU, etc.
@@ -83,6 +90,33 @@ class GLPlotWidget(QGLWidget):
                 gl.glColor3f(r, g, b)
                 self.draw_square(x, y)
 
+    def draw_player(self):
+
+        r, g, b = COLOURS['grey']
+        gl.glColor3f(r, g, b)
+        for x in xrange(self.player.x, self.player.x + 4):
+            for y in xrange(self.player.y, self.player.y + 3):
+                self.draw_square(x, y)
+
+            self.draw_square(x, y + 4)
+
+    def move(self):
+        bunny_point = self.bunny_point
+
+        if bunny_point[0] <= 0:
+            bunny_point[0] += choice([0, 1])
+        elif bunny_point[0] + 18 >= self.width:
+            bunny_point[0] -= choice([0, 1])
+        else:
+            bunny_point[0] += choice(range(-5, 6))
+
+        if bunny_point[1] <= 0:
+            bunny_point[1] += choice([0, 1, 2])
+        elif bunny_point[1] + 12 >= self.height:
+            bunny_point[1] -= choice([0, 1, 2])
+        else:
+            bunny_point[1] += choice(range(-5, 6))
+
 
 
     def paintGL(self):
@@ -104,23 +138,11 @@ class GLPlotWidget(QGLWidget):
         
         r, g, b = COLOURS['grey']
         gl.glColor3f(r, g, b)
+
         bunny_point = self.bunny_point
 
-        if bunny_point[0] <= 0:
-            bunny_point[0] += choice([0, 1])
-        elif bunny_point[0] + 18 >= self.width:
-            bunny_point[0] -= choice([0, 1])
-        else:
-            bunny_point[0] += choice(range(-5, 6))
-
-        if bunny_point[1] <= 0:
-            bunny_point[1] += choice([0, 1, 2])
-        elif bunny_point[1] + 12 >= self.height:
-            bunny_point[1] -= choice([0, 1, 2])
-        else:
-            bunny_point[1] += choice(range(-5, 6))
-
         self.draw_bunny(bunny_point[0], 20, bunny_point[1], 15)
+        self.draw_player()
 
     def resizeGL(self, width, height):
         """Called upon window resizing: reinitialize the viewport.
@@ -148,7 +170,7 @@ if __name__ == '__main__':
             # initialize the GL widget
             self.widget = GLPlotWidget()
 
-            self.setGeometry(0, 0, self.widget.width * 5, self.widget.height * 5)
+            self.widget.setGeometry(0, 0, self.widget.width, self.widget.height)
             self.setCentralWidget(self.widget)
             self.show()
 
@@ -157,7 +179,15 @@ if __name__ == '__main__':
 
 
             QtCore.QMetaObject.connectSlotsByName(self)
-            self.paint_timer.start(2)
+            self.paint_timer.start(160)
+
+        def keyPressEvent(self, event):
+            key = event.key()
+            if key == QtCore.Qt.Key_A:
+                self.widget.player.x -= 1
+            if key == QtCore.Qt.Key_D:
+                self.widget.player.x += 1
+            print key == QtCore.Qt.Key_A
 
  
     # create the QT App and window
